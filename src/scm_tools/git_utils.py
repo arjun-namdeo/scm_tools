@@ -97,6 +97,41 @@ def get_git_active_branch(directory_path=None):
         return str(all_valid_branches[0]).split(scm_constants.ACTIVE_BRANCH_MARK)[-1]
 
 
+def do_git_rebase(source_branch=None, directory_path=None):
+    """
+    Do the rebase for active branch
+
+    :param source_branch:       `str`           From which branch do you wants to do the rebase, defaults 'master'
+    :param directory_path:      `str`           directory path of the project
+    """
+    directory_path = directory_path or os.getcwd()
+    source_branch = source_branch or scm_constants.MASTER_BRANCH
+
+    with RunFromPath(path=directory_path):
+        active_branch = get_git_active_branch()
+
+        if active_branch is not source_branch:
+            logger.debug("You're not in the '{0}' branch. Switching back the branch to '{0}'".format(source_branch))
+            try:
+                os.system("git checkout {0}".format(source_branch))
+            except subprocess.CalledProcessError:
+                logger.warning("You have uncommitted changes in your local.!")
+                logger.warning("Please commit your changes or stash them before you can switch branches.!")
+                return False
+
+        logger.debug("Fetching the data from upstream origin...")
+        os.system("git fetch origin")
+
+        logger.debug("Updating the local repo with origin/latest")
+        os.system("git pull origin {0}".format(source_branch))
+
+        logger.debug("Checkout the original branch.")
+        os.system("git checkout {0}".format(active_branch))
+
+        logger.debug("Running git rebase")
+        os.system("git rebase {0}".format(source_branch))
+
+
 def create_dev_branch(dev_branch, source_branch=None, directory_path=None, description=None):
     """
     Create the Development branch
@@ -147,7 +182,6 @@ class PyGitRepository(object):
     Intended Usages:
 
     """
-
     def __init__(self, pkg_name, ssh_path=None, ticket_id=None, ticket_url=None, disk_path=None):
         super(PyGitRepository, self).__init__()
         self.pkg_name = pkg_name
@@ -190,9 +224,26 @@ class PyGitRepository(object):
         path = path or os.getcwd()
         read_config = cls._read_config(directory_path=path)
         if read_config:
+            # It has the scmconfig file, we can just read this and get the project info
             read_config.pop("user")
             return cls(**read_config)
-        return False
+
+        from my_python.common.general import get_project_root_from_path
+        project = get_project_root_from_path(source_path=path)
+        if not project:
+            logger.warning("This is not an valid project path. '{0}'".format(path))
+            return False
+
+        read_config = cls._read_config(directory_path=project.root_path)
+        if read_config:
+            read_config.pop("user")
+            return cls(**read_config)
+
+        # this means It's a valid project but It doesn't have
+        # the scmconfig file in it.
+        obj = cls(pkg_name=project.name, disk_path=project.root_path)
+        obj._write_config()
+        return obj
 
     def __repr__(self):
         return "ClassObject : {cls}:{name}:{branch} - {desc}".format(cls=self.__class__.__name__, name=self.pkg_name,
@@ -255,7 +306,7 @@ class PyGitRepository(object):
         """
         Method for rebasing your current branch with latest origin-master branch
         """
-        raise NotImplementedError
+        return do_git_rebase(source_branch=with_branch)
 
     def push(self, to_branch=None, open_merge_request=True):
         """

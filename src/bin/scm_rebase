@@ -2,8 +2,9 @@
 # -*- coding: utf-8 -*-
 
 """
-Clone the Git package to the user directory
+Useful command for rebasing your git project
 """
+import os
 import argparse
 
 from logIO import get_logger
@@ -13,13 +14,13 @@ from scm_tools.git_utils import PyGitRepository
 logger = get_logger(__name__)
 
 
-def scm_clone_package():
+def scm_rebase_package():
     """
     Install the package
     """
     parser = parse_information()
-    obj = PyGitRepository(pkg_name=str(parser.package))
-    obj.clone(source_branch=parser.branch, overwrite_existing=parser.force)
+    py_project = PyGitRepository.from_path(path=os.getcwd())
+    py_project.rebase(with_branch=parser.branch)
 
 
 def parse_information():
@@ -27,12 +28,10 @@ def parse_information():
     Get the user input from the command line
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument("package")
-    parser.add_argument('-b', '--branch', help="Branch name, defaults to master", default=scm_constants.MASTER_BRANCH)
-    parser.add_argument('-f', '--force', help="Override existing files", action="store_true", default=False)
+    parser.add_argument("-b", "--branch", default=scm_constants.MASTER_BRANCH)
     return parser.parse_args()
 
 
 if __name__ == "__main__":
-    scm_clone_package()
+    scm_rebase_package()
 
