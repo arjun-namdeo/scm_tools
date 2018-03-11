@@ -4,9 +4,12 @@
 General Utility module for SCM_TOOLS
 """
 import os
+from logIO import get_logger
 from my_python.system import file_manager
 
 from . import constants as scm_constants
+
+logger = get_logger(__name__)
 
 
 def is_valid_path(file_path):
@@ -64,7 +67,7 @@ def scm_install_package(source, for_qc=False, override=False):
 
             file_path = os.path.join(root, each_file)
             dest_path = file_path.replace(source, installation_path)
-            print "Installing : ", dest_path
+            logger.debug("Installing : '{0}'".format(each_file))
             file_manager.copy_files(src_path=file_path, dst_path=dest_path)
 
 
@@ -79,7 +82,7 @@ def scm_install_bin_files(bin_directory, for_qc=False, override=False):
     :return:
     """
     if not os.path.isdir(bin_directory):
-        print "Expected a bin/script directory. Found file.!"
+        logger.warning("Expected a bin/script directory. Found file.!")
         return False
 
     install_dir = scm_constants.BIN_TESTING_DIR if for_qc else scm_constants.BIN_BUILDS_DIR
@@ -94,18 +97,19 @@ def scm_install_bin_files(bin_directory, for_qc=False, override=False):
             continue
 
         if for_qc:
-            print "symlink : ", src_file_path, dst_file_path
+            logger.info("Installing for testing: '{0}' >>> '{1}' ".format(src_file_path, dst_file_path))
             file_manager.create_symlinks(source=src_file_path, destination=dst_file_path)
         else:
-            print "hardlink : ", src_file_path, dst_file_path
+            logger.info("Installing package: '{0}' >>> '{1}' ".format(src_file_path, dst_file_path))
             file_manager.copy_files(src_path=src_file_path, dst_path=dst_file_path)
 
     if existing_files:
-        print "File(s) already exists in the destination place. Please use force/override command to overwrite them."
+        msg = "File(s) already exists in the destination place. Please use force/override command to overwrite them."
+        logger.info(msg)
 
     return True
 
 
 if __name__ == "__main__":
-    # scm_install(source=r"C:\arth-lab\sources\prod-test_", for_qc=True)
-    print is_valid_path(r"C:\arth_lab\builds\python_builds\scm_tools\.git")
+    scm_install_package(source=r"C:\arth-lab\sources\prod-test_", for_qc=True)
+
