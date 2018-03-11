@@ -1,0 +1,38 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""
+Useful command for pushing your git project to github
+"""
+import os
+import argparse
+
+from logIO import get_logger
+from scm_tools.git_utils import PyGitRepository
+
+logger = get_logger(__name__)
+
+
+def scm_push_package():
+    """
+    Install the package
+    """
+    parser = parse_information()
+    py_project = PyGitRepository.from_path(path=os.getcwd())
+    py_project.push(open_merge_request=parser.pull_request, force=parser.force)
+
+
+def parse_information():
+    """
+    Get the user input from the command line
+    """
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-pr", "--pull_request", action="store_true", default=False)
+    parser.add_argument("-f", "--force", action="store_true", default=False)
+
+    return parser.parse_args()
+
+
+if __name__ == "__main__":
+    scm_push_package()
+

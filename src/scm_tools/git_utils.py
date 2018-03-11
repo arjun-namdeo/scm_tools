@@ -132,6 +132,25 @@ def do_git_rebase(source_branch=None, directory_path=None):
         os.system("git rebase {0}".format(source_branch))
 
 
+def do_git_push(to_branch=None, pull_request=False, force=False):
+    """
+    Do the git push
+
+    :param to_branch:           `str`
+    :param pull_request:        `bool`
+    :param force:               `bool`
+    """
+    to_branch = get_git_active_branch() if to_branch is None else to_branch
+    directory_path = os.getcwd()
+
+    with RunFromPath(path=directory_path):
+        logger.debug("Pushing the changes to upstream")
+        cmd = "git push origin {0}".format(to_branch)
+        if force:
+            cmd += " --force"
+        os.system(cmd)
+
+
 def create_dev_branch(dev_branch, source_branch=None, directory_path=None, description=None):
     """
     Create the Development branch
@@ -308,11 +327,12 @@ class PyGitRepository(object):
         """
         return do_git_rebase(source_branch=with_branch)
 
-    def push(self, to_branch=None, open_merge_request=True):
+    def push(self, to_branch=None, open_merge_request=True, force=False):
         """
         Method for pushing your changes to $to_branch and create merge_request if asked by user
         """
-        raise NotImplementedError
+        self.rebase()
+        return do_git_push(to_branch=to_branch, pull_request=open_merge_request, force=force)
 
     def install(self, to_path=None, hard_link=False, force=True):
         """
