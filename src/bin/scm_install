@@ -1,0 +1,39 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""
+Install the current package to the user repository
+"""
+import os
+import subprocess
+import argparse
+
+from my_python.common.general import get_project_root_from_path
+
+
+def scm_install_package_from_path():
+    parser = parse_information()
+    src_path = os.getcwd()
+
+    project = get_project_root_from_path(source_path=src_path)
+    if project is None:
+        return
+
+    package_setup_file = project.get_package_setup_file()
+    cmd = "python {0} install {1} {2}".format(package_setup_file, str(parser.live), str(parser.force))
+    print cmd
+    subprocess.call(cmd)
+
+
+def parse_information():
+    """
+    Get the user input from the command line
+    """
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-l', '--live', action="store_true", default=False)
+    parser.add_argument('-f', '--force', action="store_true", default=False)
+    return parser.parse_args()
+
+
+if __name__ == "__main__":
+    scm_install_package_from_path()
