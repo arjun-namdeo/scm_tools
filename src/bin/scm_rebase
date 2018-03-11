@@ -1,0 +1,37 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""
+Useful command for rebasing your git project
+"""
+import os
+import argparse
+
+from logIO import get_logger
+from scm_tools import constants as scm_constants
+from scm_tools.git_utils import PyGitRepository
+
+logger = get_logger(__name__)
+
+
+def scm_rebase_package():
+    """
+    Install the package
+    """
+    parser = parse_information()
+    py_project = PyGitRepository.from_path(path=os.getcwd())
+    py_project.rebase(with_branch=parser.branch)
+
+
+def parse_information():
+    """
+    Get the user input from the command line
+    """
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-b", "--branch", default=scm_constants.MASTER_BRANCH)
+    return parser.parse_args()
+
+
+if __name__ == "__main__":
+    scm_rebase_package()
+

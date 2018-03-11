@@ -8,10 +8,16 @@ import os
 import subprocess
 import argparse
 
+from logIO import get_logger
 from my_python.common.general import get_project_root_from_path
+
+logger = get_logger(__name__)
 
 
 def scm_install_package_from_path():
+    """
+    Install the package
+    """
     parser = parse_information()
     src_path = os.getcwd()
 
@@ -21,7 +27,7 @@ def scm_install_package_from_path():
 
     package_setup_file = project.get_package_setup_file()
     cmd = "python {0} install {1} {2}".format(package_setup_file, str(parser.live), str(parser.force))
-    print cmd
+    logger.debug("Running cmd: '{0}'".format(cmd))
     subprocess.call(cmd)
 
 

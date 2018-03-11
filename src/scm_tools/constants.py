@@ -13,3 +13,4 @@ DEVELOP_BRANCH = "develop"
 
 INVALID_FORMATS = [".pyc", ".gitignore", ".ini", ".idea", ".git"]
 ACTIVE_BRANCH_MARK = "* "
+PACKAGE_CONFIG_FILE = ".scmconf"

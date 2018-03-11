@@ -1,0 +1,41 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""
+Create a dev branch for active git project
+"""
+import os
+import argparse
+
+from logIO import get_logger
+from scm_tools import constants as scm_constants
+from scm_tools.git_utils import PyGitRepository
+
+logger = get_logger(__name__)
+
+
+def scm_develop_package():
+    """
+    Install the package
+    """
+    parser = parse_information()
+    py_project = PyGitRepository.from_path(path=os.getcwd())
+    py_project.develop(to_branch=parser.branch, need_rebase=parser.rebase, source_branch=parser.source,
+                       description=parser.description)
+
+
+def parse_information():
+    """
+    Get the user input from the command line
+    """
+    parser = argparse.ArgumentParser()
+    parser.add_argument("branch", default=scm_constants.DEVELOP_BRANCH)
+    parser.add_argument("-s", "--source", help="Source branch to clone from", default=scm_constants.MASTER_BRANCH)
+    parser.add_argument("-r", "--rebase", help="Do you want to rebase dev_branch", action="store_true", default=True)
+    parser.add_argument("-d", "--description", help="Description note for the branch")
+    return parser.parse_args()
+
+
+if __name__ == "__main__":
+    scm_develop_package()
+
