@@ -29,7 +29,7 @@ def parse_information():
     Get the user input from the command line
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument("branch", default=scm_constants.DEVELOP_BRANCH)
+    parser.add_argument("branch", nargs='?', default=scm_constants.DEVELOP_BRANCH)
     parser.add_argument("-s", "--source", help="Source branch to clone from", default=scm_constants.MASTER_BRANCH)
     parser.add_argument("-r", "--rebase", help="Do you want to rebase dev_branch", action="store_true", default=True)
     parser.add_argument("-d", "--description", help="Description note for the branch")
