@@ -26,6 +26,9 @@ def scm_install_package_from_path():
         return
 
     package_setup_file = project.get_package_setup_file()
+    user_input = raw_input("Please enter the version number (defaults to 0.0.1) : ")
+    print user_input
+    raise ValueError("asd")
     cmd = "python {0} install {1} {2}".format(package_setup_file, str(parser.live), str(parser.force))
     logger.debug("Running cmd: '{0}'".format(cmd))
     subprocess.call(cmd)

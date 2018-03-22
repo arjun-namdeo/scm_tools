@@ -110,6 +110,29 @@ def scm_install_bin_files(bin_directory, for_qc=False, override=False):
     return True
 
 
+def get_latest_version(package, auto_increment=True):
+    """
+    Get the latest build version number for given package, Usually this func will be helpful
+    when we want to install things in version controlled evn
+
+    :param package:             `PyProject`             Python Project object or full_path of the project
+    :param auto_increment:      `bool`                  Do you want to auto increment the version and give you that.?
+
+    :return:
+                         `str`      If the package is valid and latest i.e. 1.4.6
+                         `None`     If the package is not a valid py project
+
+    """
+    if isinstance(package, str):
+        from my_python.common.general import get_project_root_from_path
+        package = get_project_root_from_path(source_path=package)
+        if not package:
+            logger.error("Cannot validate the given package", exc_info=True)
+            return
+
+
+
+
 if __name__ == "__main__":
     scm_install_package(source=r"C:\arth-lab\sources\prod-test_", for_qc=True)
 
