@@ -1,0 +1,132 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""
+Load the requested Env by the user
+"""
+import os
+import tempfile
+import json
+import yaml
+import argparse
+
+DEFAULT_CONFIG = "default"
+
+PY_BUILD_DIR = os.path.join(os.getenv("PIPE_SOURCE"), "python")
+
+
+class PythonEnvBuilder(object):
+    """
+    Env builder class for python packages
+    """
+    def __init__(self, config_file_path):
+        self.config_file = config_file_path
+        if not os.path.isfile(self.config_file):
+            raise IOError("Given config file not found...")
+
+        self._packages_dict = dict()
+        self._collect_all_paths = dict()
+
+    def _read_config_file(self):
+        stream = open(self.config_file, "r")
+        docs = yaml.load_all(stream)
+
+        for doc in docs:
+            for package, version in doc.items():
+                self._packages_dict[package] = version
+
+    def _find_paths(self):
+        if not self._packages_dict:
+            return
+
+        for package, version in self._packages_dict.iteritems():
+            package_dir = os.path.join(os.path.join(PY_BUILD_DIR, package))
+
+            # TODO add version support
+            ver_package_dir = os.path.join(package_dir, os.listdir(package_dir)[0])
+
+            if not os.path.isdir(ver_package_dir):
+                print "{0} dir not found ".format(ver_package_dir)
+                continue
+
+            package_config_file = os.path.join(ver_package_dir, "build_config.json")
+            if not os.path.isfile(package_config_file):
+                print "package config file not found for ", package
+                continue
+
+            self._add_path_from_config(config_file=package_config_file, package_dir=ver_package_dir)
+
+    def _add_path_from_config(self, config_file, package_dir):
+        with open(config_file, "r") as read:
+            data = json.load(read)
+
+        if not data:
+            return
+
+        for key, values in data.iteritems():
+            global_data = os.getenv(key, "")
+            values = [os.path.join(package_dir, val) for val in values]
+            if key in self._collect_all_paths.keys():
+                _values = self._collect_all_paths.get(key)
+                for v in values:
+                    if v in global_data:
+                        # already in the path
+                        continue
+                    if v not in _values:
+                        _values.append(v)
+                self._collect_all_paths[key] = _values
+            else:
+                self._collect_all_paths[key] = values
+
+    def run(self):
+        self._read_config_file()
+        self._find_paths()
+
+        temp_build_file = tempfile.NamedTemporaryFile(delete=False, suffix=".sh")
+
+        with open(temp_build_file.name, "w") as writeFile:
+            for variable, variable_data in self._collect_all_paths.iteritems():
+                _variable_data = ";".join(variable_data)
+
+                # for windows hack
+                _variable_data = _variable_data.replace("\\", "/")
+
+                if os.getenv(variable):
+                    string_to_write = 'export {0}="${0};{1}";'.format(variable, _variable_data)
+                else:
+                    string_to_write = 'export {0}="{1}";'.format(variable, _variable_data)
+
+                writeFile.write(string_to_write)
+
+            writeFile.close()
+
+        cmd = str("source {0}".format(temp_build_file.name)).replace("\\", "/")
+        print "Please run below line in your command line."
+        print "\t", cmd
+
+
+def build_env():
+    """
+    Build the environment
+    """
+    parser = parse_information()
+    config_directory = os.path.join(PY_BUILD_DIR, ".env_conf", "{0}.yml".format(parser.config))
+    if os.path.isfile(config_directory):
+        obj = PythonEnvBuilder(config_directory)
+        obj.run()
+    else:
+        raise IOError("Config File not found for '{0}'".format(parser.config))
+
+
+def parse_information():
+    """
+    Get the user input from the command line
+    """
+    parser = argparse.ArgumentParser()
+    parser.add_argument("config", nargs='?', default=DEFAULT_CONFIG)
+    return parser.parse_args()
+
+
+if __name__ == "__main__":
+    build_env()
+

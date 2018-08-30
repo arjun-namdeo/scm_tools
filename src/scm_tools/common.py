@@ -34,14 +34,14 @@ def is_valid_path(file_path):
     return True
 
 
-def scm_install_package(source, for_qc=False, override=False):
+def scm_install_package(source, for_qc=False, overwrite=False):
     """
     Compile the source code and generate a skeleton for production use.
     This method will take your active directory and
 
     :param source:                                  s
     :param for_qc:
-    :param override:            `bool`              Override old files.?
+    :param overwrite:            `bool`              Override old files.?
     :return:
     """
     if for_qc:
@@ -49,7 +49,7 @@ def scm_install_package(source, for_qc=False, override=False):
         # We need to create a symlink so that user can do continuous tests
         # with his code
         installation_path = os.path.join(scm_constants.PY_TESTING_DIR, os.path.basename(source))
-        file_manager.create_symlinks(source=source, destination=installation_path, override=override)
+        file_manager.create_symlinks(source=source, destination=installation_path, overwrite=overwrite)
         return True
 
     # Let's build and install everything in the PY_BUILDS directory
